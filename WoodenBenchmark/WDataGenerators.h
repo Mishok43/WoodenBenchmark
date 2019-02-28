@@ -1,15 +1,17 @@
 #pragma once
 #include <random>
+
 class WDataGenerator
 {
 public:
-	static int* generateArrayIntUniform(std::size_t size, int minValue=0, int maxValue=10000000)
+	template<typename DistributionType, typename ValueType = DistributionType::result_type>
+	static ValueType* generateArray(std::size_t size, ValueType minValue, ValueType maxValue)
 	{
 		std::random_device rd;
 		std::mt19937 gen(rd());
-		std::uniform_int_distribution<> dis(minValue, maxValue);
-
-		int* arr = new int[size];
+		DistributionType dis(minValue, maxValue);
+		
+		ValueType* arr = new ValueType[size];
 
 		for (std::size_t i = 0; i < size; ++i)
 		{
@@ -20,3 +22,6 @@ public:
 	}
 };
 
+int f(){
+	int* t = WDataGenerator::generateArray<std::uniform_int_distribution<int> >((size_t)0, 1, 2);
+}
