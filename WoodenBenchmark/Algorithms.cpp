@@ -3,6 +3,7 @@
 #include "WDataGenerators.h"
 uint32_t* arrRandInt0;
 uint32_t* arrRandInt1;
+uint32_t* arrPartiallySortedInt0;
 
 void _declspec(noinline) InsertionSort(std::size_t n)
 {
@@ -47,6 +48,8 @@ int main()
 	arrRandInt1 = new uint32_t[N + 1];
 	std::memcpy(arrRandInt1 + 1, arrRandInt0, N * sizeof(uint32_t));
 	BENCHMARK(InsertionSortSentinel, N);
+
+	arrPartiallySortedInt0 = WDataGenerator::generatyArrayPartiallySorted<std::uniform_int_distribution<uint32_t>>(N, 0u, 20u, 2);
 
 	return 0;
 
