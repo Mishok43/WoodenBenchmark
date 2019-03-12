@@ -1,55 +1,82 @@
 #pragma once
 #include "WBenchmark.h"
 #include "WDataGenerators.h"
-uint32_t* arrRandInt0;
-uint32_t* arrRandInt1;
-uint32_t* arrPartiallySortedInt0;
 
-void _declspec(noinline) InsertionSort(std::size_t n)
+
+void _declspec(noinline) InsertionSort(float* arr, std::size_t n)
 {
 	for (std::size_t i = 1; i < n; ++i)
 	{
-		uint32_t val = arrRandInt0[i];
+		float val = arr[i];
 		int j = i;
-		while (j > 0 && val < arrRandInt0[j-1])
+		while (j > 0 && val < arr[j-1])
 		{
-			arrRandInt0[j] = arrRandInt0[j-1];
+			arr[j] = arr[j-1];
 			--j;
 		}
-		arrRandInt0[j] = val;
+		arr[j] = val;
 	}
 }
 
-void _declspec(noinline) InsertionSortSentinel(std::size_t n)
+void _declspec(noinline) InsertionSortSentinel(float* arr, std::size_t n)
 {
-	arrRandInt1[0] = 0;
-	for (std::size_t i = 2; i < n + 1; ++i)
+	for (std::size_t i = 2; i < n; ++i)
 	{
-		uint32_t val = arrRandInt1[i];
+		float val = arr[i];
 		int j = i;
-		while (val < arrRandInt1[j - 1])
+		while (val < arr[j - 1])
 		{
-			arrRandInt1[j] = arrRandInt1[j - 1];
+			arr[j] = arr[j - 1];
 			--j;
 		}
-		arrRandInt1[j] = val;
+		arr[j] = val;
 	}
 }
 
+
+
+void BenchmarkSorts(const std::string& benchmarkLabel, float* arr, std::size_t n)
+{
+
+	float* arr1 = new float[n];
+	std::memcpy(arr1, arr, n * sizeof(float));
+
+	BENCHMARK(benchmarkLabel, InsertionSortSentinel, arr1, n);
+	BENCHMARK(benchmarkLabel, InsertionSort, arr, n);
+
+//	delete[] arr1;
+}
 
 int main()
 {
-	uint32_t N;
+	float N;
+	std::cout << "Testing arrays. Input the size: " << std::endl;
 	std::cin >> N;
-	arrRandInt0 = WDataGenerator::generateArray<std::uniform_int_distribution<uint32_t>>(N, 0u, 100000u);
 
-	BENCHMARK(InsertionSort, N);
+	float max = 1000000.0;
+	float min = 0.0;
+	float* uniformUnsorted = WDataGenerator::generateArray<std::uniform_real_distribution<float>>(N, 0.0, 100000.0);
+	uniformUnsorted[0] = 0; // hack for sentinal sortings
+	BenchmarkSorts("Uniform Distributed", uniformUnsorted, N);
 
-	arrRandInt1 = new uint32_t[N + 1];
-	std::memcpy(arrRandInt1 + 1, arrRandInt0, N * sizeof(uint32_t));
-	BENCHMARK(InsertionSortSentinel, N);
+	float* normalUnsorted = WDataGenerator::generateArray<std::normal_distribution<float>>(N, max/2.0, max/6.0);
+	normalUnsorted[0] = 0; // hack for sentinal sortings
+	BenchmarkSorts("Normal Distributed", normalUnsorted, N);
+	
+	float* chiSquaredUnsorted = WDataGenerator::generateArray<std::chi_squared_distribution<float>>(N, 2);
+	chiSquaredUnsorted[0] = 0; // hack for sentinal sortings
+	BenchmarkSorts("Chi Squared Distributed", chiSquaredUnsorted, N);
 
-	arrPartiallySortedInt0 = WDataGenerator::generatyArrayPartiallySorted<std::uniform_int_distribution<uint32_t>>(N, 0u, 20u, 2);
+	float* uniformPartiallySorted = WDataGenerator::generateArrayPartiallySorted<std::uniform_real_distribution<float>>(N, 2, 0.0, 1000000.0);
+	uniformPartiallySorted[0] = 0; // hack for sentinal sortings
+	BenchmarkSorts("Uniform Distributed| Partially Sorted", uniformPartiallySorted, N);
+
+	/*
+	delete[] uniformUnsorted;
+	delete[] normalUnsorted;
+	delete[] chiSquaredUnsorted;
+	delete[] uniformPartiallySorted;
+	*/
 
 	return 0;
 

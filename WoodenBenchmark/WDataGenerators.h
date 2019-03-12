@@ -5,12 +5,12 @@
 class WDataGenerator
 {
 public:
-	template<typename DistributionType, typename ValueType = DistributionType::result_type>
-	static ValueType* generateArray(std::size_t size, ValueType minValue, ValueType maxValue)
+	template<typename DistributionType, typename ValueType = DistributionType::result_type, typename... Args>
+	static ValueType* generateArray(std::size_t size, Args... distributionArgs)
 	{
 		std::random_device rd;
 		std::mt19937 gen(rd());
-		DistributionType dis(minValue, maxValue);
+		DistributionType dis(distributionArgs...);
 		
 		ValueType* arr = new ValueType[size];
 
@@ -22,20 +22,14 @@ public:
 		return arr;
 	}
 
-	template<typename DistributionType, typename ValueType = DistributionType::result_type>
-	static ValueType* generateArrayPartiallySorted(std::size_t size, ValueType minValue, ValueType maxValue, uint8_t unsortedFactor)
+	template<typename DistributionType, typename ValueType = DistributionType::result_type, typename... Args>
+	static ValueType* generateArrayPartiallySorted(std::size_t size, uint8_t unsortedFactor, Args... distributionArgs)
 	{
 		constexpr uint8_t UNCORRECT_NUM_INDICES = uint8_t(0) - 1;
 		constexpr std::size_t UNCORRECT_ID = std::size_t(0) - 1;
 
-		ValueType* arr = generateArray<DistributionType>(size, minValue, maxValue);
+		ValueType* arr = generateArray<DistributionType>(size, distributionArgs...);
 		std::sort(arr, arr + size);
-		
-		std::size_t* swapIndices = new std::size_t[size];
-		for (std::size_t i = 0; i < size; ++i)
-		{
-			swapIndices[i] = i;
-		}
 
 		uint8_t *numPossibleIndices = new uint8_t[size];
 		for (uint8_t i = 0; i < unsortedFactor; ++i)
@@ -47,8 +41,6 @@ public:
 
 		std::memset(numPossibleIndices + unsortedFactor, 1 + 2 * unsortedFactor, (size - 2 * unsortedFactor)*sizeof(uint8_t));
 
-		std::random_shuffle(swapIndices, swapIndices + size);
-
 		ValueType* res = new ValueType[size];
 
 		std::uniform_real_distribution<> uniNormDist(0.0, 1.0);
@@ -56,7 +48,7 @@ public:
 		std::mt19937 e2(rd());
 		for (std::size_t i = 0; i < size; ++i)
 		{
-			std::size_t j = swapIndices[i];
+			std::size_t j = i;
 
 			double overallPosabilities = 0.0;
 			uint16_t iStart, iFinish;
@@ -81,7 +73,7 @@ public:
 
 			std::size_t iSwap = UNCORRECT_ID;
 
-			for (uint16_t k = iStart; k <= iFinish; ++k)
+			for (std::size_t k = iStart; k <= iFinish; ++k)
 			{
 				if (numPossibleIndices[k] != UNCORRECT_NUM_INDICES)
 				{
@@ -104,7 +96,7 @@ public:
 				double u = uniNormDist(e2); // get uniform distributed random variable
 
 				double curCDF = 0.0; // current value of CDF
-				for (uint16_t k = iStart; k <= iFinish; ++k)
+				for (std::size_t k = iStart; k <= iFinish; ++k)
 				{
 					if (numPossibleIndices[k] != UNCORRECT_NUM_INDICES)
 					{
@@ -122,7 +114,7 @@ public:
 
 			numPossibleIndices[iSwap] = UNCORRECT_NUM_INDICES; // set UNCORRECT_NUM_INDICES as flag for not considering it in future
 
-			for (uint16_t k = iStart; k <= iFinish; ++k)
+			for (std::size_t k = iStart; k <= iFinish; ++k)
 			{
 				if (numPossibleIndices[k] != UNCORRECT_NUM_INDICES)
 				{
@@ -131,7 +123,7 @@ public:
 				}
 			}
 
-			res[j] = iSwap;
+			res[j] = arr[iSwap];
 		}
 
 		delete[] arr;
