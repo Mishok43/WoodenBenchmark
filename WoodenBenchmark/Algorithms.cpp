@@ -33,6 +33,31 @@ void _declspec(noinline) InsertionSortSentinel(float* arr, std::size_t n)
 	}
 }
 
+void _declspec(noinline) ShellSort(int* arr, size_t size, int t, int f)
+{
+	int f = t;
+	while (f < size / 2)
+	{
+		f *= t;
+	}
+	f /= t;
+
+	for (std::size_t gap = f; gap > 0; gap /= t)
+	{
+		for (std::size_t i = gap; i < size; ++i)
+		{
+			int curValue = arr[i];
+			int j;
+			for (j = i; j >= gap && curValue < arr[j - gap]; j -= gap)
+			{
+				arr[j] = arr[j - gap];
+			}
+
+			arr[j] = curValue;
+		}
+	}
+}
+
 
 
 void BenchmarkSorts(const std::string& benchmarkLabel, float* arr, std::size_t n)
