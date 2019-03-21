@@ -48,26 +48,24 @@ public:
 		std::mt19937 e2(rd());
 		for (std::size_t i = 0; i < size; ++i)
 		{
-			std::size_t j = i;
-
 			double overallPosabilities = 0.0;
 			uint16_t iStart, iFinish;
-			if (j < unsortedFactor)
+			if (i < unsortedFactor)
 			{
 				iStart = 0u;
-				iFinish = j + unsortedFactor;
+				iFinish = i + unsortedFactor;
 			}
 			else
 			{
-				if (j >= size-unsortedFactor)
+				if (i >= size-unsortedFactor)
 				{
-					iStart = j - unsortedFactor;
+					iStart = i - unsortedFactor;
 					iFinish = size - 1u;
 				}
 				else
 				{
-					iStart = j - unsortedFactor;
-					iFinish = j + unsortedFactor;
+					iStart = i - unsortedFactor;
+					iFinish = i + unsortedFactor;
 				}
 			}
 
@@ -123,7 +121,7 @@ public:
 				}
 			}
 
-			res[j] = arr[iSwap];
+			res[i] = arr[iSwap];
 		}
 
 		delete[] arr;
