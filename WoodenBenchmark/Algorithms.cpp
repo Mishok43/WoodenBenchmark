@@ -78,21 +78,14 @@ void _declspec(noinline) InsertionSortSentinelUnrooled(float* arr, std::size_t n
 	}
 }
 
-void _declspec(noinline) ShellSort(int* arr, size_t size, int t, int f)
+void _declspec(noinline) ShellSort(float* arr, size_t size, int t, int f)
 {
-	int f = t;
-	while (f < size / 2)
-	{
-		f *= t;
-	}
-	f /= t;
-
 	for (std::size_t gap = f; gap > 0; gap /= t)
 	{
 		for (std::size_t i = gap; i < size; ++i)
 		{
-			int curValue = arr[i];
-			int j;
+			float curValue = arr[i];
+			std::size_t j;
 			for (j = i; j >= gap && curValue < arr[j - gap]; j -= gap)
 			{
 				arr[j] = arr[j - gap];
@@ -103,11 +96,38 @@ void _declspec(noinline) ShellSort(int* arr, size_t size, int t, int f)
 	}
 }
 
+void _declspec(noinline) MergeSort(float* _arr, size_t size)
+{
+	MergeSortNamespace::arr = _arr;
+}
 
+namespace MergeSortNamespace
+{
+	float* arr;
+
+	void Sorting(size_t lo, size_t hi)
+	{
+		if (lo <= hi)
+		{
+			return;
+		}
+
+		size_t mid = lo + (hi - lo) / 2;
+		Sorting(lo, mid);
+		Sorting(mid + 1, hi);
+		Merge(lo, mid, hi);
+	}
+
+	void Merge(size_t lo, size_t mi, size_t hi)
+	{
+
+	}
+
+}
 
 void BenchmarkSorts(const std::string& benchmarkLabel, float* arr, std::size_t n)
 {
-	float* arr0 = new float[n];
+	/*float* arr0 = new float[n];
 	std::memcpy(arr0, arr, n * sizeof(float));
 	BENCHMARK(benchmarkLabel, InsertionSort, arr0, n);
 	delete[] arr0;
@@ -117,11 +137,24 @@ void BenchmarkSorts(const std::string& benchmarkLabel, float* arr, std::size_t n
 	BENCHMARK(benchmarkLabel, InsertionSortSentinel, arr1, n);
 	delete[] arr1;
 
+	*/
 	float* arr2 = new float[n];
 	std::memcpy(arr2, arr, n * sizeof(float));
 	BENCHMARK(benchmarkLabel, InsertionSortSentinelUnrooled, arr2, n);
 	delete[] arr2;
 
+
+	int t = 2;
+	int f = t;
+	while (f < n/ 2)
+	{
+		f *= t;
+	}
+	f /= t;
+
+	float* arr4 = new float[n];
+	std::memcpy(arr4, arr, n * sizeof(float));
+	BENCHMARK(benchmarkLabel, ShellSort, arr4, n, t, f);
 
 	float* arr3 = new float[n];
 	std::memcpy(arr3, arr, n * sizeof(float));
@@ -136,6 +169,7 @@ void BenchmarkSorts(const std::string& benchmarkLabel, float* arr, std::size_t n
 		return 0;
 	});
 	delete[] arr3;
+
 
 	std::cout << std::endl;
 }
@@ -173,6 +207,11 @@ int main()
 	uniformPartiallySorted1[0] = -INFINITY; // hack for sentinal sortings
 	BenchmarkSorts(str_format("Uniform Distributed | Partially Sorted - unsorting factor = %d", 7), uniformPartiallySorted1, N);
 	delete[] uniformPartiallySorted1;
+
+	float* uniformReverseSorted = WDataGenerator::generateReverseArray<std::uniform_real_distribution<float>>(N, 0.0, 1000000.0);
+	uniformReverseSorted[0] = -INFINITY; // hack for sentinal sortings
+	BenchmarkSorts(str_format("Uniform Distributed | Reverse Sorted"), uniformReverseSorted, N);
+	delete[] uniformReverseSorted;
 	
 
 	return 0;

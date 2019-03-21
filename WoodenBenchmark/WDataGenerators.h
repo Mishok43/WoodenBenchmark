@@ -23,6 +23,26 @@ public:
 	}
 
 	template<typename DistributionType, typename ValueType = DistributionType::result_type, typename... Args>
+	static ValueType* generateReverseArray(std::size_t size, Args... distributionArgs)
+	{
+		std::random_device rd;
+		std::mt19937 gen(rd());
+		DistributionType dis(distributionArgs...);
+
+		ValueType* arr = new ValueType[size];
+
+		for (std::size_t i = 0; i < size; ++i)
+		{
+			arr[i] = dis(gen);
+		}
+
+		std::sort(arr, arr+size);
+		std::reverse(arr, arr+size);
+
+		return arr;
+	}
+
+	template<typename DistributionType, typename ValueType = DistributionType::result_type, typename... Args>
 	static ValueType* generateArrayPartiallySorted(std::size_t size, uint8_t unsortedFactor, Args... distributionArgs)
 	{
 		constexpr uint8_t UNCORRECT_NUM_INDICES = uint8_t(0) - 1;
