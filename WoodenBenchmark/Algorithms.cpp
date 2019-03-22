@@ -96,38 +96,87 @@ void _declspec(noinline) ShellSort(float* arr, size_t size, int t, int f)
 	}
 }
 
-void _declspec(noinline) MergeSort(float* _arr, size_t size)
-{
-	MergeSortNamespace::arr = _arr;
-}
 
 namespace MergeSortNamespace
 {
 	float* arr;
+	float* buffer;
 
-	void Sorting(size_t lo, size_t hi)
+	void Merge(size_t lo, size_t mi, size_t hi, bool isLastMerge = false)
 	{
-		if (lo <= hi)
+
+		for (size_t i = lo, j = mi + 1, k = lo; k <= hi; ++k)
+		{
+			if (i > mi)
+			{
+				arr[k] = buffer[j++];
+			}
+			else if (j > hi)
+			{
+				arr[k] = buffer[i++];
+			}
+			else
+			{
+				arr[k] = (buffer[i] < buffer[j]) ? buffer[i++] : buffer[j++];
+			}
+		}
+
+		if (!isLastMerge)
+		{
+			std::memcpy(buffer + lo, arr + lo, sizeof(float)*(hi - lo + 1));
+		}
+	}
+
+	void Sorting(size_t lo, size_t hi, bool startSorting = false)
+	{
+		if (lo >= hi)
 		{
 			return;
 		}
 
 		size_t mid = lo + (hi - lo) / 2;
-		Sorting(lo, mid);
-		Sorting(mid + 1, hi);
-		Merge(lo, mid, hi);
+		Sorting(lo, mid, false);
+		Sorting(mid + 1, hi, false);
+		Merge(lo, mid, hi, startSorting);
 	}
 
-	void Merge(size_t lo, size_t mi, size_t hi)
+	void SortingWithInsertion(size_t lo, size_t hi, bool startSorting = false)
 	{
-
+		size_t size = hi - lo + 1;
+		if (size > 128)
+		{
+			size_t mid = lo + (hi - lo) / 2;
+			SortingWithInsertion(lo, mid, false);
+			SortingWithInsertion(mid + 1, hi, false);
+			Merge(lo, mid, hi, startSorting);
+		}
+		else
+		{
+			InsertionSort(buffer + lo, size);
+		}
 	}
-
 }
+
+void _declspec(noinline) MergeSort(float* _arr, size_t size)
+{
+	MergeSortNamespace::arr = new float[size];
+	MergeSortNamespace::buffer = _arr;
+	MergeSortNamespace::Sorting(0, size - 1, true);
+	delete[] MergeSortNamespace::arr;
+}
+
+void _declspec(noinline) MergeSortWithInsertion(float* _arr, size_t size)
+{
+	MergeSortNamespace::arr = new float[size];
+	MergeSortNamespace::buffer = _arr;
+	MergeSortNamespace::SortingWithInsertion(0, size - 1, true);
+	delete[] MergeSortNamespace::arr;
+}
+
 
 void BenchmarkSorts(const std::string& benchmarkLabel, float* arr, std::size_t n)
 {
-	/*float* arr0 = new float[n];
+	float* arr0 = new float[n];
 	std::memcpy(arr0, arr, n * sizeof(float));
 	BENCHMARK(benchmarkLabel, InsertionSort, arr0, n);
 	delete[] arr0;
@@ -137,12 +186,10 @@ void BenchmarkSorts(const std::string& benchmarkLabel, float* arr, std::size_t n
 	BENCHMARK(benchmarkLabel, InsertionSortSentinel, arr1, n);
 	delete[] arr1;
 
-	*/
 	float* arr2 = new float[n];
 	std::memcpy(arr2, arr, n * sizeof(float));
 	BENCHMARK(benchmarkLabel, InsertionSortSentinelUnrooled, arr2, n);
 	delete[] arr2;
-
 
 	int t = 2;
 	int f = t;
@@ -155,6 +202,7 @@ void BenchmarkSorts(const std::string& benchmarkLabel, float* arr, std::size_t n
 	float* arr4 = new float[n];
 	std::memcpy(arr4, arr, n * sizeof(float));
 	BENCHMARK(benchmarkLabel, ShellSort, arr4, n, t, f);
+	delete[] arr4;
 
 	float* arr3 = new float[n];
 	std::memcpy(arr3, arr, n * sizeof(float));
@@ -170,6 +218,15 @@ void BenchmarkSorts(const std::string& benchmarkLabel, float* arr, std::size_t n
 	});
 	delete[] arr3;
 
+	float* arr5 = new float[n];
+	std::memcpy(arr5, arr, n * sizeof(float));
+	BENCHMARK(benchmarkLabel, MergeSort, arr5, n);
+	delete[] arr5;
+
+	float* arr6 = new float[n];
+	std::memcpy(arr6, arr, n * sizeof(float));
+	BENCHMARK(benchmarkLabel, MergeSortWithInsertion, arr6, n);
+	delete[] arr6;
 
 	std::cout << std::endl;
 }
